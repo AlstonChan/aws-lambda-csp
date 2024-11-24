@@ -8,6 +8,7 @@
   "scripts": {
     "unit": "jest",
     "lint": "eslint '*.ts' --quiet --fix",
+    "format": "prettier --write .",
     "compile": "tsc",
     "test": "npm run compile && npm run unit"
   },
