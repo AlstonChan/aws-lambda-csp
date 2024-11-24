@@ -20,6 +20,7 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
           metadata: {
             description:
               'The referrer attribute of the protected resource, or the empty string if the protected resource has no referrer.',
+            docs: 'https://www.w3.org/TR/CSP3/#violation-referrer',
           },
         },
         'blocked-uri': {
@@ -27,6 +28,7 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
           metadata: {
             description:
               'The originally requested URL of the resource that was prevented from loading, stripped for reporting, or the empty string if the resource has no URL (inline script and inline style, for example).',
+            docs: 'https://www.w3.org/TR/CSP3/#obtain-violation-blocked-uri',
           },
         },
         'effective-directive': {
@@ -34,6 +36,7 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
           metadata: {
             description:
               'The name of the policy directive that was violated. This will contain the directive whose enforcement triggered the violation (e.g. "script-src") even if that directive does not explicitly appear in the policy, but is implicitly activated via the default-src directive.',
+            docs: 'https://www.w3.org/TR/CSP3/#violation-effective-directive',
           },
         },
         'violated-directive': {
@@ -53,6 +56,7 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
           enum: ['enforce', 'report'],
           metadata: {
             description: 'Each policy has an associated disposition, which is either "enforce" or "report".',
+            docs: 'https://www.w3.org/TR/CSP3/#violation-disposition',
           },
         },
         'status-code': {
@@ -74,6 +78,7 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
           metadata: {
             description:
               'The URL of the resource where the violation occurred, stripped for reporting. null if it does not exists',
+            docs: 'https://www.w3.org/TR/CSP3/#violation-sample',
           },
         },
         'line-number': {

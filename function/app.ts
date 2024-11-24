@@ -1,5 +1,13 @@
+import 'dotenv/config';
+
 // External Modules
 import Ajv from 'ajv/dist/jtd';
+import { CloudWatchClient, PutMetricDataCommand, type PutMetricDataCommandInput } from '@aws-sdk/client-cloudwatch';
+import {
+  CloudWatchLogsClient,
+  PutLogEventsCommand,
+  type PutLogEventsCommandInput,
+} from '@aws-sdk/client-cloudwatch-logs';
 
 // Internal Modules
 import { reportUriSchema } from './schema/report-uri';
@@ -16,10 +24,13 @@ const ajv = new Ajv();
 const serialize = ajv.compileSerializer(responseSchema);
 const parse = ajv.compileParser<ContentSecurityPolicyLevelThreeReportUri>(reportUriSchema);
 
+if (!process.env.REGION) throw new Error('Environment variable REGION is not set!');
+const cloudwatch = new CloudWatchClient({ region: process.env.REGION });
+const cloudwatchLog = new CloudWatchLogsClient({ region: 'REGION' });
+
 /**
  * A lambda handler that is being invoked directly through the lambda function url itself (not using API Gateway).
  * @param {Object} event - Lambda Function URL event
- * Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
  * @returns {Object} object - Lambda Function URL result, follow the same schema as the Amazon API Gateway payload format version 2.0.
  * @see https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html#urls-payloads
  */
@@ -76,6 +87,9 @@ export const lambdaHandler = async (event: LambdaFunctionURLEvent): Promise<Lamb
       };
     }
 
+    // Send logs and metrics to CloudWatch
+    await sendReportToCloudWatch(cspReport, parsedReport);
+
     return {
       statusCode: 200,
       body: serialize({
@@ -120,4 +134,87 @@ function hasValidContentType(headers: Record<string, string | undefined>): boole
   }
 
   return false;
+}
+
+/**
+ * Send the CSP report to AWS cloudwatch logs and/or metrics
+ * @param cspReport The stringify CSP report in string
+ * @param parsedReport THe parsed CSP report in object
+ * @returns void
+ */
+async function sendReportToCloudWatch(
+  cspReport: string,
+  parsedReport: ContentSecurityPolicyLevelThreeReportUri,
+): Promise<void> {
+  const timestamp = Date.now();
+
+  const LOG_GROUP_NAME = process.env.LOG_GROUP_NAME;
+  const LOG_STREAM_NAME = process.env.LOG_STREAM_NAME;
+
+  const METRIC_NAMESPACE = process.env.METRIC_NAMESPACE;
+  const METRIC_NAME = process.env.METRIC_NAME;
+
+  // Prepare the log event
+  let logEvent: PutLogEventsCommandInput | undefined = undefined;
+  if (LOG_GROUP_NAME && LOG_STREAM_NAME) {
+    logEvent = {
+      logGroupName: LOG_GROUP_NAME,
+      logStreamName: LOG_STREAM_NAME,
+      logEvents: [
+        {
+          timestamp: timestamp,
+          message: cspReport,
+        },
+      ],
+    };
+  }
+
+  // Prepare the metric data
+  let metricData: PutMetricDataCommandInput | undefined = undefined;
+  if (METRIC_NAMESPACE && METRIC_NAME) {
+    metricData = {
+      MetricData: [
+        {
+          MetricName: METRIC_NAME,
+          Dimensions: [
+            {
+              Name: 'ViolatedDirective',
+              Value: parsedReport['csp-report']['violated-directive'],
+            },
+            {
+              Name: 'SourceFile',
+              Value: parsedReport['csp-report']['source-file'] || 'none',
+            },
+            {
+              Name: 'BlockedUri',
+              Value: parsedReport['csp-report']['blocked-uri'],
+            },
+            {
+              Name: 'DocumentUri',
+              Value: parsedReport['csp-report']['document-uri'],
+            },
+          ],
+          Value: 1,
+          Timestamp: new Date(timestamp),
+          Unit: 'Count',
+        },
+      ],
+      Namespace: METRIC_NAMESPACE,
+    };
+  }
+
+  // Send to CloudWatch
+  if (logEvent && !metricData) {
+    await cloudwatchLog.send(new PutLogEventsCommand(logEvent));
+  }
+  if (!logEvent && metricData) {
+    await cloudwatch.send(new PutMetricDataCommand(metricData));
+  }
+  if (logEvent && metricData) {
+    await Promise.all([
+      cloudwatchLog.send(new PutLogEventsCommand(logEvent)),
+      cloudwatch.send(new PutMetricDataCommand(metricData)),
+    ]);
+  }
+  return;
 }
