@@ -95,4 +95,4 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
     },
   },
   additionalProperties: false,
-} as const;
+};

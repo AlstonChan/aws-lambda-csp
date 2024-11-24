@@ -70,8 +70,8 @@ export const lambdaHandler = async (event: LambdaFunctionURLEvent): Promise<Lamb
       return {
         statusCode: 400,
         body: serialize({
-          message: 'invalid report-uri payload',
-          error: parse.message || 'An unexpected error occurred. Please try again later.',
+          message: 'Bad Request',
+          error: parse.message || 'invalid report-uri payload',
         }),
       };
     }
@@ -88,9 +88,9 @@ export const lambdaHandler = async (event: LambdaFunctionURLEvent): Promise<Lamb
     if (err instanceof Error) {
       return {
         statusCode: 500,
-        body: JSON.stringify({
+        body: serialize({
           message: 'Internal Server Error',
-          errors: err.message,
+          error: err.message,
         }),
       };
     }

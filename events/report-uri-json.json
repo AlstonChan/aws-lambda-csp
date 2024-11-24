@@ -4,7 +4,6 @@
   "rawPath": "/",
   "rawQueryString": "",
   "cookies": [],
-  "queryStringParameters": null,
   "headers": {
     "sec-fetch-mode": "no-cors",
     "content-length": "1001",
@@ -40,7 +39,7 @@
       "path": "/",
       "protocol": "HTTP/1.1",
       "sourceIp": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-      "user-agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_2; en-US) AppleWebKit/536.2 (KHTML, like Gecko) Chrome/47.0.2772.124 Safari/537"
+      "userAgent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_2; en-US) AppleWebKit/536.2 (KHTML, like Gecko) Chrome/47.0.2772.124 Safari/537"
     },
     "requestId": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
     "routeKey": "$default",
@@ -49,7 +48,5 @@
     "timeEpoch": 1732425066259
   },
   "body": "{\"csp-report\":{\"document-uri\":\"https://www.example.com/\",\"referrer\":\"\",\"violated-directive\":\"connect-src\",\"effective-directive\":\"connect-src\",\"original-policy\":\"default-src 'self' https://www.example.com\",\"disposition\":\"report\",\"blocked-uri\":\"https://example.com/js/script.js\",\"line-number\":3,\"column-number\":26,\"source-file\":\"https://www.example.com/run.js\",\"status-code\":200,\"script-sample\":\"\"}}",
-  "isBase64Encoded": false,
-  "pathParameters": null,
-  "stageVariables": null
+  "isBase64Encoded": false
 }

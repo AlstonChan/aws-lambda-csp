@@ -4,7 +4,6 @@
   "rawPath": "/",
   "rawQueryString": "",
   "cookies": [],
-  "queryStringParameters": null,
   "headers": {
     "sec-fetch-mode": "no-cors",
     "content-length": "1001",
@@ -40,7 +39,7 @@
       "path": "/",
       "protocol": "HTTP/1.1",
       "sourceIp": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-      "user-agent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_2; en-US) AppleWebKit/536.2 (KHTML, like Gecko) Chrome/47.0.2772.124 Safari/537"
+      "userAgent": "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_2; en-US) AppleWebKit/536.2 (KHTML, like Gecko) Chrome/47.0.2772.124 Safari/537"
     },
     "requestId": "1b4db7eb-4057-5ddf-91e0-36dec72071f5",
     "routeKey": "$default",
@@ -49,7 +48,5 @@
     "timeEpoch": 1732425066259
   },
   "body": "ewogICJjc3AtcmVwb3J0IjogewogICAgImRvY3VtZW50LXVyaSI6ICJodHRwczovL3d3dy5leGFtcGxlLmNvbS8iLAogICAgInJlZmVycmVyIjogIiIsCiAgICAidmlvbGF0ZWQtZGlyZWN0aXZlIjogImNvbm5lY3Qtc3JjIiwKICAgICJlZmZlY3RpdmUtZGlyZWN0aXZlIjogImNvbm5lY3Qtc3JjIiwKICAgICJvcmlnaW5hbC1wb2xpY3kiOiAiZGVmYXVsdC1zcmMgJ3NlbGYnIGh0dHBzOi8vd3d3LmV4YW1wbGUuY29tIiwKICAgICJkaXNwb3NpdGlvbiI6ICJyZXBvcnQiLAogICAgImJsb2NrZWQtdXJpIjogImh0dHBzOi8vZXhhbXBsZS5jb20vanMvc2NyaXB0LmpzIiwKICAgICJsaW5lLW51bWJlciI6IDMsCiAgICAiY29sdW1uLW51bWJlciI6IDI2LAogICAgInNvdXJjZS1maWxlIjogImh0dHBzOi8vd3d3LmV4YW1wbGUuY29tL3J1bi5qcyIsCiAgICAic3RhdHVzLWNvZGUiOiAyMDAsCiAgICAic2NyaXB0LXNhbXBsZSI6ICIiCiAgfQp9Cg==",
-  "isBase64Encoded": true,
-  "pathParameters": null,
-  "stageVariables": null
+  "isBase64Encoded": true
 }
