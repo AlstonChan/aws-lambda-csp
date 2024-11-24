@@ -1,9 +1,17 @@
 {
   "name": "aws-lambda-csp",
   "version": "1.0.0",
-  "description": "A aws Lambda function that receive CSP violation reports, store them in DynamoDB and setup CloudWatch dashboard",
+  "description": "A aws Lambda function that receive CSP violation reports, and send it to CloudWatch logs",
   "main": "app.js",
-  "author": "SAM CLI",
+  "author": {
+    "name": "Chan Alston",
+    "email": "devalston390@gmail.com",
+    "url": "https://www.chanalston.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlstonChan/aws-lambda-csp.git"
+  },
   "license": "MIT",
   "scripts": {
     "unit": "jest",
