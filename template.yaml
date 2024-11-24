@@ -3,33 +3,27 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-lambda-csp
 
-  SAM Template for aws-lambda-csp, a simple AWS Lambda function provides an endpoint for CSP violation, save it to DynamoDB, and setup CloudWatch logs monitoring.
+  SAM Template for aws-lambda-csp, a simple AWS Lambda function provides an endpoint for CSP violation, and send it to CloudWatch logs.
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     MemorySize: 256
     Timeout: 3
-    Runtime: nodejs20.x
+    Runtime: nodejs22.x
     Architectures:
-      - arm64
+      - x86_64
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
       LogFormat: JSON
 Resources:
-  ReceiveCSPReportFunction:
+  ReceiveCSPReport:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: function/
       Handler: app.lambdaHandler
       PackageType: Zip
-      Events:
-        HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /hello
-            Method: get
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -39,29 +33,29 @@ Resources:
         EntryPoints:
         - app.ts
 
-  ApplicationResourceGroup:
-    Type: AWS::ResourceGroups::Group
-    Properties:
-      Name:
-        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
-      ResourceQuery:
-        Type: CLOUDFORMATION_STACK_1_0
-  ApplicationInsightsMonitoring:
-    Type: AWS::ApplicationInsights::Application
-    Properties:
-      ResourceGroupName:
-        Ref: ApplicationResourceGroup
-      AutoConfigurationEnabled: true
-Outputs:
+  # ApplicationResourceGroup:
+  #   Type: AWS::ResourceGroups::Group
+  #   Properties:
+  #     Name:
+  #       Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+  #     ResourceQuery:
+  #       Type: CLOUDFORMATION_STACK_1_0
+  # ApplicationInsightsMonitoring:
+  #   Type: AWS::ApplicationInsights::Application
+  #   Properties:
+  #     ResourceGroupName:
+  #       Ref: ApplicationResourceGroup
+  #     AutoConfigurationEnabled: true
+# Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  # HelloWorldApi:
+  #   Description: API Gateway endpoint URL for Prod stage for Hello World function
+  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  # HelloWorldFunction:
+  #   Description: Hello World Lambda Function ARN
+  #   Value: !GetAtt HelloWorldFunction.Arn
+  # HelloWorldFunctionIamRole:
+  #   Description: Implicit IAM Role created for Hello World function
+  #   Value: !GetAtt HelloWorldFunctionRole.Arn
