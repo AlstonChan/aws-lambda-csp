@@ -1,8 +1,17 @@
 import 'dotenv/config';
 
 // External Modules
+/**
+ * @see https://ajv.js.org/guide/getting-started.html
+ */
 import Ajv from 'ajv/dist/jtd';
+/**
+ * @see https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-cloudwatch
+ */
 import { CloudWatchClient, PutMetricDataCommand, type PutMetricDataCommandInput } from '@aws-sdk/client-cloudwatch';
+/**
+ * @see https://github.com/aws/aws-sdk-js-v3/tree/main/clients/client-cloudwatch-logs
+ */
 import {
   CloudWatchLogsClient,
   PutLogEventsCommand,
@@ -26,7 +35,7 @@ const parse = ajv.compileParser<ContentSecurityPolicyLevelThreeReportUri>(report
 
 if (!process.env.REGION) throw new Error('Environment variable REGION is not set!');
 const cloudwatch = new CloudWatchClient({ region: process.env.REGION });
-const cloudwatchLog = new CloudWatchLogsClient({ region: 'REGION' });
+const cloudwatchLog = new CloudWatchLogsClient({ region: process.env.REGION });
 
 /**
  * A lambda handler that is being invoked directly through the lambda function url itself (not using API Gateway).
