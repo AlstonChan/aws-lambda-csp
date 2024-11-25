@@ -43,6 +43,12 @@ To use the SAM CLI to deploy the serverless application, you need the following 
 - Node.js - [Install Node.js 22](https://nodejs.org/en/), including the NPM package management tool.
 - Docker - [Install Docker community edition](https://docs.docker.com/engine/install/)
 
+First clone the repository into your local machine:
+
+```bash
+git clone https://github.com/AlstonChan/aws-lambda-csp.git
+```
+
 To build and deploy your application for the first time, run the following in your shell:
 
 ```bash
@@ -56,9 +62,18 @@ sam deploy --guided # Deploy to AWS
 > Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
 
 - **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-- **AWS Region**: The AWS region you want to deploy your app to.
+- **AWS Region**: The AWS region you want to deploy your app to. You should check the [documentation](https://docs.aws.amazon.com/lambda/latest/dg/urls-configuration.html) on which region to use, because not all region supports lambda function URL.
 - **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
+- **Parameter**: Enter the parameter (env) for the project
+  - **NodeEnv**: Always choose the default `production` by hitting enter. Default to _production_.
+  - **LogGroupName**: This will be the log group name that will be used by the lambda function. Note that the csp violation report will be log at `${LogGroupName}/report` while the lambda function execution log itself will be stored at `${LogGroupName}/system`. Default to _/aws/lambda/ReceiveCSPReport_.
+  - **LogStreamName**: The log Stream name under the log group. Default to _ReceiveCSPReport_.
+  - **MetricNamespace**: This should be the project name. Default to _aws-lambda-csp_.
+  - **MetricName**: The metric name to stored the violation metric. Default to _CSPViolation_.
+  - **AllowOrigin**: The origin that are allowed to send csp violation report, should be the your website host.
+- **Confirm changes before deploy**: If set to yes, a table of resource to be created/updated/deleted will be shown first before deploying the changeset.
 - **Allow SAM CLI IAM role creation**: Many AWS SAM templates create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
+- **ReceiveCSPReportFunction Function Url has no authentication. Is this okay?**: If set to no, the deploy will exit immediately. You should always enter yes as csp violation report endpoint should always be public facing and thus IAM authentication is not possible.
 - **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
 
 ## Use the SAM CLI to build and test locally
