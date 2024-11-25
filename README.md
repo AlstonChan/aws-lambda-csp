@@ -100,8 +100,8 @@ Tests are defined in the `function/tests` folder in this project. Use NPM to ins
 
 ```bash
 aws-lambda-csp$ cd function
-hello-world$ npm install
-hello-world$ npm run test
+aws-lambda-csp$ npm install
+aws-lambda-csp$ npm run test
 ```
 
 ## Cleanup
