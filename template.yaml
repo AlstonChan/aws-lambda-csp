@@ -26,6 +26,7 @@ Parameters:
     Description: Log stream name for the Lambda function.
   MetricNamespace:
     Type: String
+    Default: aws-lambda-csp
     Description: Metric namespace for the Lambda function.
   MetricName:
     Type: String
