@@ -21,6 +21,7 @@ import {
 // Internal Modules
 import { reportUriSchema } from './schema/report-uri';
 import { responseSchema } from './schema/response';
+import { reportLogSchema } from './schema/report-log';
 
 // Types
 import type { LambdaFunctionURLEvent, LambdaFunctionURLResult } from 'aws-lambda';
@@ -32,6 +33,8 @@ const ACCEPTABLE_CONTENT_TYPE = 'application/csp-report';
 const ajv = new Ajv();
 const serialize = ajv.compileSerializer(responseSchema);
 const parse = ajv.compileParser<ContentSecurityPolicyLevelThreeReportUri>(reportUriSchema);
+
+const serializeLog = ajv.compileSerializer(reportLogSchema);
 
 /**
  * A lambda handler that is being invoked directly through the lambda function url itself (not using API Gateway).
@@ -93,7 +96,10 @@ export const lambdaHandler = async (event: LambdaFunctionURLEvent): Promise<Lamb
     }
 
     // Send logs and metrics to CloudWatch
-    await sendReportToCloudWatch(cspReport, parsedReport);
+    await sendReportToCloudWatch(parsedReport, {
+      userAgent: event.requestContext.http.userAgent,
+      clientIp: event.requestContext.http.sourceIp,
+    });
 
     return {
       statusCode: 200,
@@ -148,8 +154,8 @@ function hasValidContentType(headers: Record<string, string | undefined>): boole
  * @returns void
  */
 export async function sendReportToCloudWatch(
-  cspReport: string,
   parsedReport: ContentSecurityPolicyLevelThreeReportUri,
+  { clientIp, userAgent }: { clientIp?: string; userAgent?: string } = { clientIp: undefined, userAgent: undefined },
 ): Promise<void> {
   // Uncomment for debugging
   // console.log(
@@ -183,7 +189,13 @@ export async function sendReportToCloudWatch(
       logEvents: [
         {
           timestamp: timestamp,
-          message: cspReport,
+          message: serializeLog({
+            'csp-report': {
+              ...parsedReport['csp-report'],
+              clientIp,
+              userAgent,
+            },
+          }),
         },
       ],
     };

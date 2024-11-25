@@ -17,16 +17,16 @@ const sampleCSPReport: ContentSecurityPolicyLevelThreeReportUri = {
   'csp-report': {
     'document-uri': 'https://www.example.com/',
     referrer: '',
-    'violated-directive': 'connect-src',
+    'blocked-uri': 'https://example.com/js/script.js',
     'effective-directive': 'connect-src',
+    'violated-directive': 'connect-src',
     'original-policy': "default-src 'self' https://www.example.com",
     disposition: 'report',
-    'blocked-uri': 'https://example.com/js/script.js',
-    'line-number': 3,
-    'column-number': 26,
-    'source-file': 'https://www.example.com/run.js',
     'status-code': 200,
     'script-sample': '',
+    'source-file': 'https://www.example.com/run.js',
+    'line-number': 3,
+    'column-number': 26,
   },
 };
 
@@ -41,9 +41,7 @@ describe('sendReportToCloudWatch', () => {
   });
 
   it('should do nothing when no configs are present', async () => {
-    const stringifiedReport = JSON.stringify(sampleCSPReport);
-
-    await sendReportToCloudWatch(stringifiedReport, sampleCSPReport);
+    await sendReportToCloudWatch(sampleCSPReport);
 
     // Verify no calls were made
     expect(cloudWatchMock.calls()).toHaveLength(0);
@@ -57,24 +55,20 @@ describe('sendReportToCloudWatch', () => {
     process.env.METRIC_NAMESPACE = 'test-namespace';
     process.env.METRIC_NAME = 'test-metric';
 
-    const stringifiedReport = JSON.stringify(sampleCSPReport);
-
-    await sendReportToCloudWatch(stringifiedReport, sampleCSPReport);
+    await sendReportToCloudWatch(sampleCSPReport);
 
     // Verify that no calls were made
     expect(cloudWatchLogsMock.calls()).toHaveLength(0);
     expect(cloudWatchMock.calls()).toHaveLength(0);
   });
 
-  it('should send only logs when metric config is missing', async () => {
+  it('should send only logs (without clientIp and userAgent) when metric config is missing', async () => {
     // Set up environment variables
     process.env.REGION = 'us-east-1';
     process.env.LOG_GROUP_NAME = 'test-group';
     process.env.LOG_STREAM_NAME = 'test-stream';
 
-    const stringifiedReport = JSON.stringify(sampleCSPReport);
-
-    await sendReportToCloudWatch(stringifiedReport, sampleCSPReport);
+    await sendReportToCloudWatch(sampleCSPReport);
 
     // Verify that only logs were sent
     expect(cloudWatchLogsMock.calls()).toHaveLength(1);
@@ -87,7 +81,48 @@ describe('sendReportToCloudWatch', () => {
       logStreamName: 'test-stream',
       logEvents: expect.arrayContaining([
         expect.objectContaining({
-          message: stringifiedReport,
+          message: JSON.stringify({
+            'csp-report': {
+              ...sampleCSPReport['csp-report'],
+              clientIp: undefined,
+              userAgent: undefined,
+            },
+          }),
+        }),
+      ]),
+    });
+  });
+
+  it('should send only logs (with clientIp and userAgent) when metric config is missing', async () => {
+    // Set up environment variables
+    process.env.REGION = 'us-east-1';
+    process.env.LOG_GROUP_NAME = 'test-group';
+    process.env.LOG_STREAM_NAME = 'test-stream';
+
+    const clientIp = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
+    const userAgent =
+      'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_10_2; en-US) AppleWebKit/536.2 (KHTML, like Gecko) Chrome/47.0.2772.124 Safari/537';
+
+    await sendReportToCloudWatch(sampleCSPReport, { userAgent, clientIp });
+
+    // Verify that only logs were sent
+    expect(cloudWatchLogsMock.calls()).toHaveLength(1);
+    expect(cloudWatchMock.calls()).toHaveLength(0);
+
+    // Verify the log content
+    const logCall = cloudWatchLogsMock.call(0);
+    expect(logCall.args[0].input).toMatchObject({
+      logGroupName: 'test-group',
+      logStreamName: 'test-stream',
+      logEvents: expect.arrayContaining([
+        expect.objectContaining({
+          message: JSON.stringify({
+            'csp-report': {
+              ...sampleCSPReport['csp-report'],
+              userAgent,
+              clientIp,
+            },
+          }),
         }),
       ]),
     });
@@ -99,9 +134,7 @@ describe('sendReportToCloudWatch', () => {
     process.env.METRIC_NAMESPACE = 'test-namespace';
     process.env.METRIC_NAME = 'test-metric';
 
-    const stringifiedReport = JSON.stringify(sampleCSPReport);
-
-    await sendReportToCloudWatch(stringifiedReport, sampleCSPReport);
+    await sendReportToCloudWatch(sampleCSPReport);
 
     // Verify that only metrics were sent
     expect(cloudWatchMock.calls()).toHaveLength(1);
@@ -147,9 +180,7 @@ describe('sendReportToCloudWatch', () => {
     process.env.METRIC_NAMESPACE = 'test-namespace';
     process.env.METRIC_NAME = 'test-metric';
 
-    const stringifiedReport = JSON.stringify(sampleCSPReport);
-
-    await sendReportToCloudWatch(stringifiedReport, sampleCSPReport);
+    await sendReportToCloudWatch(sampleCSPReport);
 
     // Verify both logs and metrics were sent
     expect(cloudWatchLogsMock.calls()).toHaveLength(1);
@@ -161,7 +192,12 @@ describe('sendReportToCloudWatch', () => {
       logStreamName: 'test-stream',
       logEvents: expect.arrayContaining([
         expect.objectContaining({
-          message: stringifiedReport,
+          message: JSON.stringify({
+            'csp-report': {
+              ...sampleCSPReport['csp-report'],
+            },
+          }),
+          timestamp: expect.anything(),
         }),
       ]),
     });
