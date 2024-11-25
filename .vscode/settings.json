@@ -1,5 +1,9 @@
 {
-  "cSpell.words": ["esbuild", "webrtc"],
+  "cSpell.words": [
+    "esbuild",
+    "tseslint",
+    "webrtc"
+  ],
   "markdownlint.config": {
     "MD033": false
   }

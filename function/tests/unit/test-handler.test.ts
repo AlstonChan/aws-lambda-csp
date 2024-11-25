@@ -71,7 +71,7 @@ describe('Unit test for app handler', () => {
   });
 
   it('Invalid request event should fail with parsed error', async () => {
-    // @ts-expect-error
+    // @ts-expect-error: We intentionally put empty object and expect it to fail
     const result = await lambdaHandler({});
 
     if (typeof result === 'string') {
