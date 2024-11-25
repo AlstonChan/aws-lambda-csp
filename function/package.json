@@ -24,6 +24,7 @@
     "@aws-sdk/client-cloudwatch": "^3.699.0",
     "@aws-sdk/client-cloudwatch-logs": "^3.699.0",
     "ajv": "^8.17.1",
+    "aws-sdk-client-mock": "^4.1.0",
     "dotenv": "^16.4.5",
     "esbuild": "^0.24.0"
   },

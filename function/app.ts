@@ -33,10 +33,6 @@ const ajv = new Ajv();
 const serialize = ajv.compileSerializer(responseSchema);
 const parse = ajv.compileParser<ContentSecurityPolicyLevelThreeReportUri>(reportUriSchema);
 
-if (!process.env.REGION) throw new Error('Environment variable REGION is not set!');
-const cloudwatch = new CloudWatchClient({ region: process.env.REGION });
-const cloudwatchLog = new CloudWatchLogsClient({ region: process.env.REGION });
-
 /**
  * A lambda handler that is being invoked directly through the lambda function url itself (not using API Gateway).
  * @param {Object} event - Lambda Function URL event
@@ -151,10 +147,25 @@ function hasValidContentType(headers: Record<string, string | undefined>): boole
  * @param parsedReport THe parsed CSP report in object
  * @returns void
  */
-async function sendReportToCloudWatch(
+export async function sendReportToCloudWatch(
   cspReport: string,
   parsedReport: ContentSecurityPolicyLevelThreeReportUri,
 ): Promise<void> {
+  // Uncomment for debugging
+  // console.log(
+  //   `REGION: ${process.env.REGION} \n
+  //   LOG_GROUP_NAME: ${process.env.LOG_GROUP_NAME} \n
+  //   LOG_STREAM_NAME: ${process.env.LOG_STREAM_NAME} \n
+  //   METRIC_NAMESPACE: ${process.env.METRIC_NAMESPACE} \n
+  //   METRIC_NAME: ${process.env.METRIC_NAME} \n`,
+  // );
+
+  const region = process.env.REGION;
+  if (!region) return;
+
+  const cloudwatch = new CloudWatchClient({ region: process.env.REGION });
+  const cloudwatchLog = new CloudWatchLogsClient({ region: process.env.REGION });
+
   const timestamp = Date.now();
 
   const LOG_GROUP_NAME = process.env.LOG_GROUP_NAME;

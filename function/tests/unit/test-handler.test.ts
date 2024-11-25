@@ -247,7 +247,7 @@ describe('Unit test for app handler', () => {
   /**
    * Test for valid report-uri payload
    */
-  it('Valid POST request event, with base64 encoded CSP report should succeed', async () => {
+  it('Valid POST request event, with base64 encoded CSP report, without sending to CloudWatch should succeed', async () => {
     const result = await lambdaHandler(eventBase64 as unknown as LambdaFunctionURLEvent);
 
     if (typeof result === 'string') {
@@ -262,7 +262,7 @@ describe('Unit test for app handler', () => {
       }),
     );
   });
-  it('Valid POST request event, with json encoded CSP report should succeed', async () => {
+  it('Valid POST request event, with json encoded CSP report, without sending to CloudWatch should succeed', async () => {
     const result = await lambdaHandler(eventJson as unknown as LambdaFunctionURLEvent);
 
     if (typeof result === 'string') {
