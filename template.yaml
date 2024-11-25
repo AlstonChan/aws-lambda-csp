@@ -1,3 +1,5 @@
+# This is the SAM template for the aws-lambda-csp project, see below for the docs of AWS SAM template anatomy
+# @see https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy.html
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
@@ -5,27 +7,112 @@ Description: >
 
   SAM Template for aws-lambda-csp, a simple AWS Lambda function provides an endpoint for CSP violation, and send it to CloudWatch logs.
 
+# @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
+Parameters:
+  NodeEnv:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - production
+    Description: Set the environment (e.g., production or development)
+  LogGroupName:
+    Type: String
+    Default: /aws/lambda/ReceiveCSPReport
+    Description: Log group name for the Lambda function. The log group of the csp report will be postfixed with /report, while the log group of the lambda function will be postfixed with /system.
+  LogStreamName:
+    Type: String
+    Default: ReceiveCSPReport
+    Description: Log stream name for the Lambda function.
+  MetricNamespace:
+    Type: String
+    Description: Metric namespace for the Lambda function.
+  MetricName:
+    Type: String
+    Default: CSPViolation
+    Description: Metric name for the Lambda function.
+  AllowOrigin:
+    Type: String
+    Description: The website that can send CSP reports to the Lambda function.
+
+# @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html
+Conditions:
+  IsProduction:
+    Fn::Equals: [!Ref NodeEnv, production]
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
+    Environment:
+      Variables:
+        NODE_ENV: PRODUCTION
+        REGION: us-east-1
+        LOG_GROUP_NAME: !Sub ${LogGroupName}/report
+        LOG_STREAM_NAME: !Ref LogStreamName
+        METRIC_NAMESPACE: !Ref MetricNamespace
+        METRIC_NAME: !Ref MetricName
     MemorySize: 256
     Timeout: 3
     Runtime: nodejs22.x
     Architectures:
       - x86_64
 
-    # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
-    LoggingConfig:
-      LogFormat: JSON
+# For a list of resources, @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
 Resources:
-  ReceiveCSPReport:
+  # This is the log group that the lambda function will use to send csp report to CloudWatch
+  # @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-loggroup.html
+  CSPReportLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${LogGroupName}/report
+      LogGroupClass: STANDARD
+      RetentionInDays: 180
+
+  # This is the log stream that the lambda function will use to send csp report to CloudWatch
+  # @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-logstream.html
+  CSPReportLogStream:
+    Type: AWS::Logs::LogStream
+    DependsOn: [ CSPReportLogGroup ]
+    Properties:
+      LogGroupName: !Ref CSPReportLogGroup
+      LogStreamName: !Ref LogStreamName
+
+  # @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html
+  ReceiveCSPReportFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: function/
       Handler: app.lambdaHandler
       PackageType: Zip
+      # You can add LoggingConfig parameters such as the LogFormat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
+      LoggingConfig:
+        ApplicationLogLevel: INFO
+        LogFormat: JSON
+        LogGroup: !Sub ${LogGroupName}/system
+      # @see https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-function-functionurlconfig.html
+      FunctionUrlConfig:
+        Cors:
+          AllowOrigins:
+            !If
+              - IsProduction
+              - [!Ref AllowOrigin] # Your production domain
+              - ["http://localhost:3000"] # Your local development server
+          AllowMethods:
+            - POST
+        AuthType: NONE
+      # @see https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - cloudwatch:PutMetricData
+              Resource: "*"
+    # @see https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
+      BuildMethod: esbuild # esbuild is the only supported build method
       BuildProperties:
         Minify: true
         Target: es2020
@@ -33,29 +120,55 @@ Resources:
         EntryPoints:
         - app.ts
 
-  # ApplicationResourceGroup:
-  #   Type: AWS::ResourceGroups::Group
-  #   Properties:
-  #     Name:
-  #       Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
-  #     ResourceQuery:
-  #       Type: CLOUDFORMATION_STACK_1_0
-  # ApplicationInsightsMonitoring:
-  #   Type: AWS::ApplicationInsights::Application
-  #   Properties:
-  #     ResourceGroupName:
-  #       Ref: ApplicationResourceGroup
-  #     AutoConfigurationEnabled: true
-# Outputs:
+  # @see https://docs.aws.amazon.com/ARG/latest/userguide/resource-groups.html
+  # @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-resourcegroups-group.html
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name: !Sub ApplicationInsights-SAM-${AWS::StackName}
+      Description: !Sub Resource group for ${AWS::StackName} stack created by SAM
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+
+  # @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-applicationinsights-application.html
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    DependsOn: [ ApplicationResourceGroup ]
+    Properties:
+      ResourceGroupName: !Ref ApplicationResourceGroup
+      AutoConfigurationEnabled: true
+
+# @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
+Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  # HelloWorldApi:
-  #   Description: API Gateway endpoint URL for Prod stage for Hello World function
-  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  # HelloWorldFunction:
-  #   Description: Hello World Lambda Function ARN
-  #   Value: !GetAtt HelloWorldFunction.Arn
-  # HelloWorldFunctionIamRole:
-  #   Description: Implicit IAM Role created for Hello World function
-  #   Value: !GetAtt HelloWorldFunctionRole.Arn
+  ReceiveCSPReportFunction:
+    Description: ARN of the ReceiveCSPReport Lambda Function
+    Value: !GetAtt ReceiveCSPReportFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-ReceiveCSPReportFunctionArn"
+  ReceiveCSPReportFunctionUrl:
+    Description: The URL for the ReceiveCSPReport Lambda Function
+    Value: !GetAtt ReceiveCSPReportFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub "${AWS::StackName}-ReceiveCSPReportFunctionUrl"
+  ReceiveCSPReportFunctionIamRole:
+    Description: "Implicit IAM Role created for ReceiveCSPReport function"
+    Value: !GetAtt ReceiveCSPReportFunctionRole.Arn
+  ApplicationResourceGroupName:
+    Description: Name of the Resource Group for Application Insights
+    Value: !Ref ApplicationResourceGroup
+    Export:
+      Name: !Sub "${AWS::StackName}-ApplicationResourceGroupName"
+  ApplicationInsightsApplicationARN:
+    Description: ARN of the Application Insights Application
+    Value: !GetAtt ApplicationInsightsMonitoring.ApplicationARN
+    Export:
+      Name: !Sub "${AWS::StackName}-ApplicationInsightsApplicationArn"
+  CSPReportLogGroupName:
+    Description: Name of the CloudWatch Log Group for CSP reports
+    Value: !Ref CSPReportLogGroup
+  CSPReportLogStreamName:
+    Description: Name of the CloudWatch Log Stream for CSP reports
+    Value: !Ref CSPReportLogStream
