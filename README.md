@@ -135,7 +135,10 @@ The AWS console nor AWS SAM provide a direct way to configure custom domain for 
    - You can now request the certificate and it will show you a table of **CNAME** record you need to enter into in your Cloudflare Dashboard.
 4. Go to your Cloudflare dashboard, select the domain name you enter just now, navigate to DNS section and enter the CNAME record as shown by AWS.
 5. You need to add another **CNAME** record that points the subdomain or your apex domain to the CloudFront distribution domain name too.
-6. Wait until the AWS certificate manager has verified that the **CNAME** record exists (usually takes around 5 minutes for Cloudflare to propagate the DNS setting), you should then be able to access the lambda function using the custom domain you specify.
+6. Wait until the AWS certificate manager has verified that the **CNAME** record exists (usually takes around 5 minutes for Cloudflare to propagate the DNS setting).
+7. Navigate back to CloudFront dashboard, select the distribution you just created, click **edit**
+   - \*\*Alternate domain name (CNAME) - optional You should be able to see your _ACM Certificate_ you have configured previously, select it and save changes.
+8. You should be able to access your lambda function through the custom domain now.
 
 ## Resources
 
