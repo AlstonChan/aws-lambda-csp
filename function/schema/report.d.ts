@@ -44,7 +44,7 @@ export interface ContentSecurityPolicyLevelThreeReportUri {
     'original-policy': string;
     disposition: 'enforce' | 'report';
     'status-code': number;
-    'script-sample': string;
+    'script-sample'?: string;
     'source-file': string | null;
     'line-number': number;
     'column-number': number;

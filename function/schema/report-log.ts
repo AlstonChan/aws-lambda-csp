@@ -19,6 +19,7 @@ export const reportLogSchema: JTDSchemaType<ReportLog> = {
         ...reportUriSchema.properties['csp-report'].properties,
       },
       optionalProperties: {
+        ...reportUriSchema.properties['csp-report'].optionalProperties,
         userAgent: {
           type: 'string',
           metadata: {

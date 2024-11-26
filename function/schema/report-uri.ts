@@ -66,12 +66,6 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
               'The status-code of the HTTP response that contained the protected resource, if the protected resource was obtained over HTTP. Otherwise, the number 0.',
           },
         },
-        'script-sample': {
-          type: 'string',
-          metadata: {
-            description: 'An empty string unless otherwise specified.',
-          },
-        },
         'source-file': {
           nullable: true,
           type: 'string',
@@ -93,6 +87,14 @@ export const reportUriSchema: JTDSchemaType<ContentSecurityPolicyLevelThreeRepor
           metadata: {
             description:
               'The column number in source-file on which the violation occurred, which is a a non-negative integer.',
+          },
+        },
+      },
+      optionalProperties: {
+        'script-sample': {
+          type: 'string',
+          metadata: {
+            description: 'An empty string unless otherwise specified.',
           },
         },
       },

@@ -23,10 +23,10 @@ const sampleCSPReport: ContentSecurityPolicyLevelThreeReportUri = {
     'original-policy': "default-src 'self' https://www.example.com",
     disposition: 'report',
     'status-code': 200,
-    'script-sample': '',
     'source-file': 'https://www.example.com/run.js',
     'line-number': 3,
     'column-number': 26,
+    'script-sample': '',
   },
 };
 
