@@ -98,7 +98,8 @@ export const lambdaHandler = async (event: LambdaFunctionURLEvent): Promise<Lamb
     // Send logs and metrics to CloudWatch
     await sendReportToCloudWatch(parsedReport, {
       userAgent: event.requestContext.http.userAgent,
-      clientIp: event.requestContext.http.sourceIp,
+      // Use the x-forwarded-for header if it exists, otherwise use the sourceIp
+      clientIp: parseForwardedFor(event.headers) || event.requestContext.http.sourceIp,
     });
 
     return {
@@ -145,6 +146,24 @@ function hasValidContentType(headers: Record<string, string | undefined>): boole
   }
 
   return false;
+}
+
+/**
+ * Parse the x-forwarded-for header from the headers
+ * @param {Object} headers - The headers object from the event
+ * @returns {string | undefined} - The client IP address or undefined if not found
+ */
+function parseForwardedFor(headers: Record<string, string | undefined>): string | undefined {
+  const contentType = ['x-forwarded-for', 'X-Forwarded-For', 'X-FORWARDED-FOR'];
+
+  for (const key of contentType) {
+    if (headers[key]) {
+      const ips = headers[key].split(',');
+      // We only care about the client IP
+      return ips[0].trim();
+    }
+  }
+  return undefined;
 }
 
 /**
