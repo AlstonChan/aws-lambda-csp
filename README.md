@@ -112,6 +112,31 @@ To delete the sample application that you created, use the AWS CLI. Assuming you
 sam delete --stack-name aws-lambda-csp
 ```
 
+## Configure Custom Domain
+
+The AWS console nor AWS SAM provide a direct way to configure custom domain for the function url. To use your own custom domain for the function url instead of the long and ugly function url, you would need to use two other AWS service, namely [Amazon CloudFront](https://aws.amazon.com/cloudfront/) and [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/). (You would probably use [Amazon Route 53](https://aws.amazon.com/route53/) if your setup your domain in AWS). We will be using a external DNS, Cloudflare to configure the custom domain.
+
+1. Create a new CloudFront distribution
+   - Origin Section
+     - **Origin domain**: Directly paste your lambda function url, for example `1pf127k4cafvof25jm7qm1bz8bit7ri8.lambda-url.us-east-1.on.aws`. AWS will recognize that this is a lambda function url.
+     - **Protocol**: Select `HTTPS only`
+       - HTTPS port: Use the default port `443`
+       - Minimum Origin SSL protocol: Use the default `TLSv1.2`
+     - **Origin path** - optional: _Leave it empty_
+     - **Name**: This should be automatically populated by AWS and have the same value as _Origin Domain_
+   - Viewer Section
+     - **Viewer protocol policy**: Select `Redirect HTTP to HTTPS`
+     - Leave other setting as default, as AWS will set the recommended setting for you, like cache key with cache disabled
+2. After a distribution is created, wait until the status is **Enabled**, and you should be able to access the function through the domain name of the CloudFront distribution.
+3. Navigate to **AWS Certificate Manager** and _request a public certificate_.
+   - **Fully qualified domain name**: This is the domain name of your lambda function url you wish to be
+   - **Validation method**: Use the default `DNS validation`
+   - **Key algorithm**: Use the default `RSA 2048`
+   - You can now request the certificate and it will show you a table of **CNAME** record you need to enter into in your Cloudflare Dashboard.
+4. Go to your Cloudflare dashboard, select the domain name you enter just now, navigate to DNS section and enter the CNAME record as shown by AWS.
+5. You need to add another **CNAME** record that points the subdomain or your apex domain to the CloudFront distribution domain name too.
+6. Wait until the AWS certificate manager has verified that the **CNAME** record exists (usually takes around 5 minutes for Cloudflare to propagate the DNS setting), you should then be able to access the lambda function using the custom domain you specify.
+
 ## Resources
 
 - [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html)
