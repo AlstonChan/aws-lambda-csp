@@ -137,15 +137,9 @@ export const lambdaHandler = async (event: LambdaFunctionURLEvent): Promise<Lamb
  * @returns {boolean} - true if the headers have the correct content-type, false otherwise
  */
 function hasValidContentType(headers: Record<string, string | undefined>): boolean {
-  const contentType = ['content-type', 'Content-Type', 'CONTENT-TYPE'];
-
-  for (const key of contentType) {
-    if (headers[key] === ACCEPTABLE_CONTENT_TYPE) {
-      return true;
-    }
-  }
-
-  return false;
+  return Object.entries(headers).some(
+    ([key, value]) => key.toLowerCase() === 'content-type' && value?.toLowerCase().startsWith(ACCEPTABLE_CONTENT_TYPE),
+  );
 }
 
 /**
