@@ -54,7 +54,7 @@ Globals:
         METRIC_NAME: !Ref MetricName
     MemorySize: 256
     Timeout: 5
-    Runtime: nodejs22.x
+    Runtime: nodejs24.x
     Architectures:
       - x86_64
 

@@ -22,7 +22,7 @@ To use it in your CSP header, specify the endpoint in the `report-uri` directive
 Content-Security-Policy-Report-Only: default-src 'self'; report-uri https://{ID}.lambda-url.{REGION}.on.aws;
 ```
 
-> \[!WARNING]\
+> [!WARNING]
 > The newest `report-to` directive is not supported and will most likely won't work. Even though `report-uri` has been deprecated, it has better browser support than `report-to` _([source](https://caniuse.com/?search=report-to))_.
 
 ### Project structure
