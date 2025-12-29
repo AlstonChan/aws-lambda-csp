@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 // External Modules
 /**
  * @see https://ajv.js.org/guide/getting-started.html
